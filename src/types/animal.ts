@@ -57,6 +57,21 @@ export interface AnimalLaudo {
   status: string;
 }
 
+export interface Animal {
+  id: string;
+  nome: string;
+  raca: string;
+  cor: string;
+  descricao: string;
+  idCliente: string;
+  sexo: string;
+  id_especie: string;
+  data_nascimento: string;
+  castrado: string;
+  vivo: string;
+  status: string;
+}
+
 export interface FichaClinica {
   id: string;
   id_ficha: string;

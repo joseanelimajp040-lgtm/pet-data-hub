@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { AnimalGeralCard } from "@/components/AnimalGeralCard";
 import { AnimalLaudoCard } from "@/components/AnimalLaudoCard";
-import { AnimalGeral, AnimalLaudo } from "@/types/animal";
+import { AnimalGeral, AnimalLaudo, Animal } from "@/types/animal";
 import { parseCSV } from "@/utils/csvParser";
 import { Search, FileText, Activity, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 const Index = () => {
   const [animaisGerais, setAnimaisGerais] = useState<AnimalGeral[]>([]);
   const [laudos, setLaudos] = useState<AnimalLaudo[]>([]);
+  const [animaisMap, setAnimaisMap] = useState<Map<string, Animal>>(new Map());
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -23,23 +24,33 @@ const Index = () => {
     try {
       setLoading(true);
 
-      const [geralResponse, laudoResponse] = await Promise.all([
+      const [geralResponse, laudoResponse, animalResponse] = await Promise.all([
         fetch('/data/animal_geral.csv'),
-        fetch('/data/animal_laudogeral.csv')
+        fetch('/data/animal_laudogeral.csv'),
+        fetch('/data/animal.csv')
       ]);
 
       const geralText = await geralResponse.text();
       const laudoText = await laudoResponse.text();
+      const animalText = await animalResponse.text();
 
       const geralData = parseCSV(geralText) as AnimalGeral[];
       const laudoData = parseCSV(laudoText) as AnimalLaudo[];
+      const animalData = parseCSV(animalText) as Animal[];
+
+      // Create a map of animal ID to animal data
+      const map = new Map<string, Animal>();
+      animalData.forEach(animal => {
+        map.set(animal.id, animal);
+      });
 
       setAnimaisGerais(geralData);
       setLaudos(laudoData);
+      setAnimaisMap(map);
 
       toast({
         title: "Dados carregados com sucesso",
-        description: `${geralData.length} registros gerais e ${laudoData.length} laudos encontrados.`,
+        description: `${geralData.length} registros gerais, ${laudoData.length} laudos e ${animalData.length} animais encontrados.`,
       });
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -53,16 +64,24 @@ const Index = () => {
     }
   };
 
-  const filteredAnimaisGerais = animaisGerais.filter(animal =>
-    animal.animal.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    animal.queixa_principal?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    animal.criado_por?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAnimaisGerais = animaisGerais.filter(animal => {
+    const animalData = animaisMap.get(animal.animal);
+    const animalNome = animalData?.nome || '';
+    
+    return animal.animal.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      animalNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      animal.queixa_principal?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      animal.criado_por?.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
-  const filteredLaudos = laudos.filter(laudo =>
-    laudo.animal.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    laudo.criado_por?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLaudos = laudos.filter(laudo => {
+    const animalData = animaisMap.get(laudo.animal);
+    const animalNome = animalData?.nome || '';
+    
+    return laudo.animal.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      animalNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      laudo.criado_por?.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,7 +131,11 @@ const Index = () => {
               {filteredAnimaisGerais.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {filteredAnimaisGerais.map((animal) => (
-                    <AnimalGeralCard key={animal.id} animal={animal} />
+                    <AnimalGeralCard 
+                      key={animal.id} 
+                      animal={animal} 
+                      animalData={animaisMap.get(animal.animal)}
+                    />
                   ))}
                 </div>
               ) : (
@@ -129,7 +152,11 @@ const Index = () => {
               {filteredLaudos.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {filteredLaudos.map((laudo) => (
-                    <AnimalLaudoCard key={laudo.id} laudo={laudo} />
+                    <AnimalLaudoCard 
+                      key={laudo.id} 
+                      laudo={laudo} 
+                      animalData={animaisMap.get(laudo.animal)}
+                    />
                   ))}
                 </div>
               ) : (

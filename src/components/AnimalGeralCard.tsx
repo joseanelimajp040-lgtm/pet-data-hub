@@ -1,14 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AnimalGeral } from "@/types/animal";
+import { AnimalGeral, Animal } from "@/types/animal";
 import { Calendar, User, Activity, Stethoscope } from "lucide-react";
 
 interface AnimalGeralCardProps {
   animal: AnimalGeral;
+  animalData?: Animal;
 }
 
-export const AnimalGeralCard = ({ animal }: AnimalGeralCardProps) => {
+export const AnimalGeralCard = ({ animal, animalData }: AnimalGeralCardProps) => {
   const formatDate = (dateStr: string) => {
     if (!dateStr || dateStr === "0000-00-00 00:00:00") return "N/A";
     return new Date(dateStr).toLocaleDateString('pt-BR');
@@ -19,10 +20,16 @@ export const AnimalGeralCard = ({ animal }: AnimalGeralCardProps) => {
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-xl">Animal ID: {animal.animal}</CardTitle>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              {animalData?.nome || `Animal ID: ${animal.animal}`}
+            </CardTitle>
             <CardDescription className="flex items-center gap-2 mt-2">
               <Calendar className="w-4 h-4" />
               {formatDate(animal.data_criacao)}
+              {animalData && (
+                <span className="ml-2 text-xs">ID: {animal.animal}</span>
+              )}
             </CardDescription>
           </div>
           <Badge variant={animal.status === "1" ? "default" : "secondary"}>
