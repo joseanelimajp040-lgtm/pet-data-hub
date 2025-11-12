@@ -1,14 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AnimalLaudo, Animal } from "@/types/animal";
+import { AnimalLaudo } from "@/types/animal";
 import { Calendar, User, FileText } from "lucide-react";
 
 interface AnimalLaudoCardProps {
   laudo: AnimalLaudo;
-  animalData?: Animal;
 }
 
-export const AnimalLaudoCard = ({ laudo, animalData }: AnimalLaudoCardProps) => {
+export const AnimalLaudoCard = ({ laudo }: AnimalLaudoCardProps) => {
   const formatDate = (dateStr: string) => {
     if (!dateStr || dateStr === "0000-00-00 00:00:00") return "N/A";
     return new Date(dateStr).toLocaleDateString('pt-BR');
@@ -37,14 +36,11 @@ export const AnimalLaudoCard = ({ laudo, animalData }: AnimalLaudoCardProps) => 
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Laudo - {animalData?.nome || `Animal ID: ${laudo.animal}`}
+              Laudo - Animal ID: {laudo.animal}
             </CardTitle>
             <CardDescription className="flex items-center gap-2 mt-2">
               <Calendar className="w-4 h-4" />
               {formatDate(laudo.data_criacao)}
-              {animalData && (
-                <span className="ml-2 text-xs">ID: {laudo.animal}</span>
-              )}
             </CardDescription>
           </div>
           <Badge variant={laudo.status === "1" ? "default" : "secondary"}>
